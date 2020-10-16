@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>feathers client</title>
+    <script src="../node_modules/socket.io-client/dist/socket.io.js"></script>
+    <script>
+      var socket = io('http://localhost:3030')
+      socket.on('connect', () => {
+        console.log('连接成功')
+      })
+      socket.on('orders created', function (order) {
+        console.log('Got a new order!', order)
+      })
+
+      // 订单列表
+      function findOrders() {
+        socket.emit('find', 'orders', {}, (error, data) => {
+          console.log('find orders', data)
+        })
+      }
+      // 创建订单
+      function createOrder() {
+        socket.emit(
+          'create',
+          'orders',
+          {
+            orderNo: Math.random().toString(32).slice(2),
+            money: (Math.random() * 10000) | 0,
+          },
+          (error, order) => {
+            console.log('order created', order)
+          },
+        )
+      }
+      // 删除订单
+      function removeOrder() {
+        socket.emit('find', 'orders', {}, (error, page) => {
+          if (page.data && page.data.length) {
+            const id = page.data[0]._id
+            console.log('id', id)
+            socket.emit('remove', 'orders', id, (error, order) => {
+              console.log('order removed', order)
+            })
+          }
+        })
+      }
+
+      function sendHello() {
+        socket.emit('hello', (error, data) => {
+          console.log('send hello')
+        })
+      }
+
+      socket.on('order created', function (order) {
+        console.log('Got a new order!', order, 'order')
+      })
+
+      socket.on('ws-push created', function (data) {
+        console.log('收到 ws-push ', data)
+      })
+    </script>
+  </head>
+  <body>
+    <button onclick="createOrder()">创建订单</button>
+    <button onclick="findOrders()">订单列表</button>
+    <button onclick="removeOrder()">删除订单</button>
+    <button onclick="sendHello()">Hello</button>
+  </body>
+</html>
